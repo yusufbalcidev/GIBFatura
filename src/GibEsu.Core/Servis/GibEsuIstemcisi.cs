@@ -102,6 +102,8 @@ public sealed class GibEsuIstemcisi
                 RemoteCertificateValidationCallback = (_, sertifika, _, hatalar) => SertifikaGecerliMi(sertifika, hatalar),
             },
             PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            // .NET'in eklediği traceparent başlığı gönderilmez; GİB'e referans istemciyle aynı başlıklar gider.
+            ActivityHeadersPropagator = System.Diagnostics.DistributedContextPropagator.CreateNoOutputPropagator(),
         };
         return new HttpClient(isleyici) { Timeout = zamanAsimi ?? TimeSpan.FromMinutes(5) };
     }

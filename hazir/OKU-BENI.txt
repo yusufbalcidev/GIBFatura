@@ -1,0 +1,15 @@
+GIB ESU Gonderim - hazir program
+================================
+Kurulum gerekmez (.NET / Visual Studio gerekmez).
+
+1. Bu klasoru (hazir) bilgisayara kopyalayin, ornegin C:\GibEsu
+2. "GIB ESU Baslat.cmd" dosyasina cift tiklayin. Tarayici kendiliginden acilir:
+   http://127.0.0.1:5080
+   (Comodo/Xcitium varsa exe'ye dogrudan cift tiklamayin; bu dosyayla acin.)
+
+Gerekenler:
+- Windows 10/11 64-bit
+- AKIS kart surucusu (C:\Windows\System32\akisp11.dll), kart okuyucu ve mali muhur karti
+- okc.gib.gov.tr / okctest.gib.gov.tr adreslerine internet erisimi
+
+Ayarlar appsettings.json icindedir. Canli gonderim varsayilan olarak kapalidir (CanliAcik: false).

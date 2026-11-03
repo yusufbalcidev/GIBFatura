@@ -35,6 +35,9 @@ public static class XmlYardimci
         return doc;
     }
 
+    /// <summary>GİB'in kabul ettiği referans paketteki (Java) XML bildirimi; ardından boşluk gelmeden kök öğe başlar.</summary>
+    public const string XmlBildirimi = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+
     /// <summary>Belgeyi biçim değiştirmeden UTF-8 (BOM'suz) olarak yazar.</summary>
     public static byte[] Kaydet(XmlDocument doc, bool xmlBildirimi)
     {
@@ -43,11 +46,23 @@ public static class XmlYardimci
             Encoding = new UTF8Encoding(false),
             Indent = false,
             NewLineHandling = NewLineHandling.None,
-            OmitXmlDeclaration = !xmlBildirimi,
+            OmitXmlDeclaration = true,
         };
         using var ms = new MemoryStream();
-        using (var yazici = XmlWriter.Create(ms, ayarlar))
+        if (xmlBildirimi)
+        {
+            // .NET bildirimi "utf-8" yazar; referansla aynı olsun diye elle yazılır.
+            // Kök öğe dışındaki boşluk ve bildirim imza özetine girmez.
+            var bildirim = Encoding.UTF8.GetBytes(XmlBildirimi);
+            ms.Write(bildirim);
+            using var yazici = XmlWriter.Create(ms, ayarlar);
+            doc.DocumentElement!.WriteTo(yazici);
+        }
+        else
+        {
+            using var yazici = XmlWriter.Create(ms, ayarlar);
             doc.Save(yazici);
+        }
         return ms.ToArray();
     }
 
