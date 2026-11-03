@@ -1,0 +1,15 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Hata";
+}
+<h1>Beklenmeyen bir hata oluştu</h1>
+<div class="mesaj hata">
+    İşlem tamamlanamadı. Ayrıntılar log dosyasına yazıldı (Sistem Kontrolü sayfasındaki veri klasörü\logs).
+    @if (ViewBag.Neden is string neden)
+    {
+        <div style="margin-top:8px"><b>Neden:</b> @neden</div>
+    }
+    <div class="soluk">İstek kimliği: <code>@Model</code></div>
+</div>
+<p class="soluk">Sorun sürerse uygulama penceresini kapatıp yeniden açın.</p>
+<a class="dugme" href="/">Ana sayfaya dön</a>

@@ -1,0 +1,100 @@
+﻿@inject Microsoft.Extensions.Options.IOptions<Ayarlar> Ayar
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – GİB ESÜ Rapor Gönderimi</title>
+    <style>
+        :root {
+            --zemin: #f4f6f9; --kart: #ffffff; --metin: #1f2933; --soluk: #5f6b7a; --cizgi: #d9dee5;
+            --ana: #1d4f91; --ana-koyu: #163d70; --basarili: #1e7a3c; --basarili-zemin: #e6f4ea;
+            --hata: #b42318; --hata-zemin: #fdecea; --uyari: #8a5a00; --uyari-zemin: #fff4dc;
+            --bilgi-zemin: #e8f0fb;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", Tahoma, sans-serif; background: var(--zemin); color: var(--metin); font-size: 15px; }
+        header { background: var(--ana); color: #fff; }
+        header .ic { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+        header .marka { font-weight: 600; font-size: 17px; padding: 14px 0; }
+        header nav { display: flex; gap: 4px; flex-wrap: wrap; }
+        header nav a { color: #dbe6f6; text-decoration: none; padding: 16px 12px; display: inline-block; }
+        header nav a:hover, header nav a.aktif { color: #fff; background: var(--ana-koyu); }
+        main { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+        h1 { font-size: 22px; margin: 0 0 16px; }
+        h2 { font-size: 17px; margin: 0 0 12px; }
+        .kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin: 12px 0 6px; }
+        label.satir { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+        input[type=text], input[type=password], input[type=number], select, input[type=file] {
+            width: 100%; max-width: 420px; padding: 8px 10px; border: 1px solid var(--cizgi); border-radius: 6px; font: inherit; background: #fff;
+        }
+        .yan-yana { display: flex; gap: 12px; flex-wrap: wrap; }
+        .yan-yana > div { min-width: 160px; }
+        button, .dugme {
+            display: inline-block; background: var(--ana); color: #fff; border: 0; border-radius: 6px; padding: 10px 18px;
+            font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; margin-top: 16px;
+        }
+        button:hover, .dugme:hover { background: var(--ana-koyu); }
+        button.ikincil, .dugme.ikincil { background: #e3e8ef; color: var(--metin); }
+        button:disabled { opacity: .6; cursor: wait; }
+        .mesaj { padding: 12px 14px; border-radius: 6px; margin-bottom: 16px; border: 1px solid transparent; }
+        .mesaj.hata { background: var(--hata-zemin); color: var(--hata); border-color: #f5c2bd; }
+        .mesaj.basarili { background: var(--basarili-zemin); color: var(--basarili); border-color: #b7dfc2; }
+        .mesaj.uyari { background: var(--uyari-zemin); color: var(--uyari); border-color: #f1d9a6; }
+        .mesaj.bilgi { background: var(--bilgi-zemin); color: var(--ana-koyu); border-color: #c7d8f0; }
+        .mesaj ul { margin: 6px 0 0; padding-left: 20px; max-height: 260px; overflow: auto; }
+        .ozet { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+        .ozet div { background: var(--zemin); border-radius: 6px; padding: 12px; }
+        .ozet b { display: block; font-size: 20px; margin-top: 4px; }
+        .tablo-kap { overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; font-size: 14px; }
+        th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--cizgi); white-space: nowrap; }
+        th { background: var(--zemin); font-weight: 600; }
+        td.sayi, th.sayi { text-align: right; font-variant-numeric: tabular-nums; }
+        .etiket { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+        .etiket.basarili { background: var(--basarili-zemin); color: var(--basarili); }
+        .etiket.hata { background: var(--hata-zemin); color: var(--hata); }
+        .etiket.bekliyor { background: var(--uyari-zemin); color: var(--uyari); }
+        .etiket.notr { background: #e3e8ef; color: var(--soluk); }
+        .etiket.canli { background: var(--hata); color: #fff; }
+        .etiket.test { background: #6b7a8f; color: #fff; }
+        .sertifika { border: 1px solid var(--cizgi); border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+        .sertifika small { color: var(--soluk); display: block; margin-top: 2px; }
+        .soluk { color: var(--soluk); }
+        code { background: var(--zemin); padding: 1px 5px; border-radius: 4px; }
+        footer { max-width: 1100px; margin: 0 auto 24px; padding: 0 16px; color: var(--soluk); font-size: 13px; }
+    </style>
+</head>
+<body>
+    @{ var c = ViewContext.RouteData.Values["controller"]?.ToString(); }
+    <header>
+        <div class="ic">
+            <div class="marka">GİB ESÜ Rapor Gönderimi</div>
+            <nav>
+                <a href="/" class="@(c == "Home" ? "aktif" : "")">Yeni Rapor</a>
+                <a href="/Gecmis" class="@(c is "Gecmis" or "Durum" ? "aktif" : "")">Geçmiş</a>
+                <a href="/Kilavuz" class="@(c is "Kilavuz" or "Sistem" ? "aktif" : "")">Kılavuz</a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        @if (!Ayar.Value.CanliAcik)
+        {
+            <div class="mesaj bilgi"><b>TEST MODU:</b> İstekler yalnızca GİB test ortamına (okctest.gib.gov.tr) gider; canlı ortam kapalı.
+                Gönderimlerin yasal geçerliliği yoktur.</div>
+        }
+        @RenderBody()
+    </main>
+    <footer>EKA Enerji ve Teknoloji A.Ş. – Şarj hizmetleri aylık bildirimi (551 Sıra No.lu VUK Genel Tebliği). Rapor takip eden ayın 15'ine kadar gönderilmelidir.</footer>
+    <script>
+        // Uzun süren işlemlerde düğmeyi kilitle (çift gönderimi önler).
+        document.querySelectorAll("form[data-kilitle]").forEach(function (f) {
+            f.addEventListener("submit", function () {
+                var b = f.querySelector("button[type=submit]");
+                if (b) { b.disabled = true; b.textContent = f.getAttribute("data-kilitle"); }
+            });
+        });
+    </script>
+</body>
+</html>

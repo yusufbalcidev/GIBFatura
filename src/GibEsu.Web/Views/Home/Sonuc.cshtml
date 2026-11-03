@@ -1,0 +1,80 @@
+@model GonderimKaydi
+@{
+    ViewData["Title"] = "Gönderim sonucu";
+    var tur = Model.DurumTuru;
+}
+<h1>Gönderim sonucu</h1>
+
+@if (Model.Hata != null)
+{
+    <div class="mesaj hata"><b>Gönderim başarısız.</b> @Model.Hata</div>
+}
+else if (tur == PaketDurumTuru.Basarili)
+{
+    <div class="mesaj basarili"><b>Rapor GİB tarafından başarıyla işlendi (durum kodu 30).</b></div>
+}
+else if (tur == PaketDurumTuru.Hata)
+{
+    <div class="mesaj hata"><b>GİB paketi reddetti: @Model.DurumAciklamasi (kod @Model.DurumKodu).</b> Hatayı giderip raporu yeniden gönderin.</div>
+}
+else
+{
+    <div class="mesaj uyari">
+        <b>Dosya GİB'e ulaştı ancak işleme henüz tamamlanmadı@(Model.DurumKodu != null ? $" (kod {Model.DurumKodu}: {Model.DurumAciklamasi})" : "").</b>
+        Bir süre sonra <a href="/Durum?paketId=@Model.PaketId&ortam=@Model.Ortam">durum sorgulayın</a>; 30 kodu görülene kadar gönderim tamamlanmış sayılmaz.
+    </div>
+}
+
+<div class="kart">
+    <table>
+        <tr><th>Paket ID</th><td><code>@Model.PaketId</code></td></tr>
+        <tr><th>Ortam</th><td><span class="etiket @(Model.Ortam == GibOrtami.Canli ? "canli" : "test")">@Model.Ortam</span></td></tr>
+        <tr><th>Dönem</th><td>@Model.Donem</td></tr>
+        <tr><th>VKN</th><td>@Model.Vkn</td></tr>
+        <tr><th>Excel</th><td>@Model.ExcelAdi</td></tr>
+        <tr><th>Plaka sayısı</th><td>@Model.SatirSayisi</td></tr>
+        <tr><th>Toplam kWh</th><td>@Bicim.Sayi(Model.ToplamKwh)</td></tr>
+        <tr><th>Toplam tutar</th><td>@Bicim.Para(Model.ToplamTutar)</td></tr>
+        <tr><th>Gönderim zamanı</th><td>@Bicim.Tarih(Model.Tarih)</td></tr>
+        <tr><th>GİB gönderim yanıtı</th><td>@(Model.GonderimYaniti ?? "–")</td></tr>
+        <tr><th>Son durum</th><td><span class="etiket @Bicim.DurumSinifi(tur)">@(Model.DurumKodu?.ToString() ?? "–")</span> @Model.DurumAciklamasi</td></tr>
+    </table>
+    <a class="dugme" href="/Durum?paketId=@Model.PaketId&ortam=@Model.Ortam">Durumu yeniden sorgula</a>
+    <a class="dugme ikincil" href="/Gecmis/Indir/@Model.PaketId">İmzalı paketi indir (.zip)</a>
+    @if (Model.ExcelOzeti != null)
+    {
+        <a class="dugme ikincil" href="/Gecmis/Excel/@Model.PaketId">Excel'i indir</a>
+    }
+    <a class="dugme ikincil" href="/Gecmis">Geçmişe dön</a>
+</div>
+
+@if (ViewBag.Satirlar is List<GibEsu.Core.Rapor.EsuSatiri> satirlar)
+{
+    <details class="kart" open="@(satirlar.Count <= 50)">
+        <summary><b>GİB'e gönderilen satırlar</b> <span class="soluk">(@satirlar.Count plaka)</span></summary>
+        <div class="tablo-kap" style="margin-top:12px">
+            <table>
+                <thead><tr><th>#</th><th>Plaka</th><th class="sayi">kWh</th><th class="sayi">Tutar (TL)</th><th>Araç kimlik no</th><th>Roaming</th></tr></thead>
+                <tbody>
+                    @{ var n = 0; }
+                    @foreach (var r in satirlar)
+                    {
+                        n++;
+                        <tr>
+                            <td class="soluk">@n</td>
+                            <td>@r.Plaka</td>
+                            <td class="sayi">@Bicim.Sayi(r.Kwh)</td>
+                            <td class="sayi">@Bicim.Sayi(r.Tutar)</td>
+                            <td>@r.AracKimlikNo</td>
+                            <td>@(r.RoamingVkn == null ? "" : $"{r.RoamingVkn} {r.RoamingUnvan}")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </details>
+}
+else
+{
+    <p class="soluk">Bu gönderimin paket dosyası bulunamadığı için satırlar gösterilemiyor.</p>
+}

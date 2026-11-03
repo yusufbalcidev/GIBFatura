@@ -1,0 +1,102 @@
+@model SistemModeli
+@{
+    ViewData["Title"] = "Sistem Kontrolü";
+    var sapma = Model.Saat.Sapma;
+}
+<h1>Sistem kontrolü</h1>
+
+@if (Model.VeriKlasoruUyarisi != null)
+{
+    <div class="mesaj uyari"><b>Veri klasörü:</b> @Model.VeriKlasoruUyarisi Bilgisayardaki güvenlik yazılımı AppData klasörüne yazmayı engelliyor olabilir.</div>
+}
+
+@if (Model.TestBasarili is bool basarili)
+{
+    <div class="mesaj @(basarili ? "basarili" : "hata")">
+        <b>@Model.TestBasligi @(basarili ? "başarılı." : "başarısız.")</b>
+        <ul>@foreach (var s in Model.TestSonuclari) { <li>@s</li> }</ul>
+    </div>
+}
+
+<div class="kart">
+    <h2>Kontroller</h2>
+    <table>
+        <tr>
+            <th>Kart sürücüsü</th>
+            <td>
+                @foreach (var (yol, var) in Model.Suruculer)
+                {
+                    <div><span class="etiket @(var ? "basarili" : "hata")">@(var ? "Var" : "Yok")</span> <code>@yol</code></div>
+                }
+            </td>
+        </tr>
+        <tr>
+            <th>Mühür kartı</th>
+            <td>
+                @if (Model.Kart.KartHatasi != null)
+                {
+                    <span class="etiket hata">Hata</span> <span>@Model.Kart.KartHatasi</span>
+                }
+                else if (Model.Kart.Sertifikalar.Count == 0)
+                {
+                    <span class="etiket bekliyor">Kart yok</span> <span>Takılı kartta sertifika bulunamadı.</span>
+                }
+                else
+                {
+                    @foreach (var s in Model.Kart.Sertifikalar)
+                    {
+                        <div><span class="etiket basarili">Bulundu</span> @SertifikaBilgisi.OrtakAd(s.Sertifika) – VKN @(s.Vkn ?? "–") – @s.Sertifika.NotAfter.ToString("dd.MM.yyyy")'e kadar geçerli
+                            @if (s.PinUyarisi != null) { <span class="etiket hata">@s.PinUyarisi</span> }</div>
+                    }
+                }
+            </td>
+        </tr>
+        <tr>
+            <th>Saat</th>
+            <td>
+                @if (sapma is TimeSpan t)
+                {
+                    var buyuk = Math.Abs(t.TotalSeconds) > 120;
+                    <span class="etiket @(buyuk ? "hata" : "basarili")">@(buyuk ? "Kaymış" : "Doğru")</span>
+                    <span>Bilgisayar saati ile @Model.Saat.Kaynak arasındaki fark: @t.TotalSeconds.ToString("0.0") sn. Gönderimde NTP saati kullanılır.</span>
+                }
+                else
+                {
+                    <span class="etiket bekliyor">NTP yok</span> <span>Saat sunucusuna ulaşılamadı; bilgisayar saati kullanılacak. Saatin doğru olduğundan emin olun.</span>
+                }
+            </td>
+        </tr>
+        @foreach (var (ortam, sonuc, ok) in Model.Baglantilar)
+        {
+            <tr>
+                <th>GİB @(ortam == GibOrtami.Canli ? "canlı" : "test") servisi</th>
+                <td><span class="etiket @(ok switch { true => "basarili", false => "hata", null => "notr" })">@(ok switch { true => "Erişilebilir", false => "Erişilemedi", null => "Kapalı" })</span> <span class="soluk">@sonuc</span></td>
+            </tr>
+        }
+        <tr><th>Sürüm</th><td>@Model.Surum</td></tr>
+        <tr><th>Veri klasörü</th><td><code>@Model.VeriKlasoru</code> <span class="soluk">(geçmiş, imzalı paketler)</span></td></tr>
+        <tr><th>Log klasörü</th><td><code>@Model.LogKlasoru</code></td></tr>
+    </table>
+</div>
+
+<div class="kart">
+    <h2>Kart ve GİB testleri</h2>
+    <p class="soluk">Mali mühürü kullanan başka bir program açıksa önce kapatın. İki test de rapor göndermez.</p>
+    <ol class="soluk">
+        <li><b>Kartı test et:</b> PIN ile karta giriş yapılır, deneme imzası atılır, örnek bir rapor ve SOAP mesajı imzalanıp doğrulanır. GİB'e hiçbir şey gönderilmez.</li>
+        <li><b>GİB imza testi:</b> Seçilen ortama (test/canlı) daha önce gönderilmiş bir paketin durumu, mühürle imzalı bir istekle GİB'e sorulur.
+            GİB cevap verirse imzamızı ve mühürün o ortamdaki yetkisini kabul ediyor demektir. Rapor gönderilmez.</li>
+    </ol>
+    <form method="post" asp-controller="Sistem" asp-action="KartTesti" data-kilitle="Test ediliyor...">
+        <partial name="_KartSecimi" model="Model.Kart" />
+        @if (Model.Kart.Sertifikalar.Count > 0)
+        {
+            <label for="paketId">GİB testi için paket ID</label>
+            <input type="text" id="paketId" name="paketId" value="@Model.GibTestPaketId" maxlength="36"
+                   placeholder="Seçilen ortama daha önce gönderilmiş bir paket ID" />
+            <div class="soluk" style="margin-top:4px">Yalnızca GİB imza testinde kullanılır. Ortam yukarıdaki seçimdir; kart testi ortamı kullanmaz.</div>
+            <button type="submit">Kartı test et</button>
+            <button type="submit" asp-controller="Sistem" asp-action="GibImzaTesti">GİB imza testi</button>
+        }
+    </form>
+</div>

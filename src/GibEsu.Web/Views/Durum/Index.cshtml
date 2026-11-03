@@ -1,0 +1,42 @@
+@model DurumModeli
+@{
+    ViewData["Title"] = "Durum Sorgula";
+}
+<h1>Paket durumu sorgula</h1>
+
+@if (Model.Hata != null)
+{
+    <div class="mesaj hata">@Model.Hata</div>
+}
+@if (Model.Durum is { } d)
+{
+    <div class="mesaj @(d.Tur == PaketDurumTuru.Basarili ? "basarili" : d.Tur == PaketDurumTuru.Hata ? "hata" : "uyari")">
+        <b>Durum kodu @d.Kod: @d.Aciklama</b>
+        @if (d.GibAciklamasi != null) { <div>GİB açıklaması: @d.GibAciklamasi</div> }
+        @if (d.Tur == PaketDurumTuru.Isleniyor) { <div>Paket henüz işleniyor; birkaç dakika sonra tekrar sorgulayın.</div> }
+        @if (d.Tur == PaketDurumTuru.Hata) { <div>Paket reddedildi; hata giderilip rapor yeniden gönderilmeli.</div> }
+    </div>
+}
+
+<div class="kart">
+    <p class="soluk">Durum sorgusu da GİB'e mühürle imzalı istek olarak gider; bu yüzden kart ve PIN gerekir.
+        Başka bir programla gönderilmiş paketler de paket ID'si ile sorgulanabilir.</p>
+    <form method="post" asp-controller="Durum" asp-action="Sorgula" data-kilitle="Sorgulanıyor...">
+        <label for="paketId">Paket ID</label>
+        <input type="text" id="paketId" name="paketId" value="@Model.PaketId" placeholder="ör. 550e8400-e29b-41d4-a716-446655440000" required />
+        <partial name="_KartSecimi" model="Model.Kart" />
+        @if (Model.Kart.Sertifikalar.Count > 0)
+        {
+            <button type="submit">Sorgula</button>
+        }
+    </form>
+</div>
+
+<div class="kart">
+    <h2>Durum kodları</h2>
+    <table>
+        <tr><td><span class="etiket basarili">30</span></td><td>Paket başarıyla işlendi</td></tr>
+        <tr><td><span class="etiket bekliyor">10 / 15</span></td><td>Kuyrukta / işlenmeye başlandı – henüz tamamlanmadı</td></tr>
+        <tr><td><span class="etiket hata">150–167</span></td><td>Hata (ör. 154 imza doğrulanamadı, 157 XML validasyon hatası, 166 istek ve paket imzası uyuşmuyor, 167 imza sahibi ile hazırlayan VKN uyuşmuyor)</td></tr>
+    </table>
+</div>

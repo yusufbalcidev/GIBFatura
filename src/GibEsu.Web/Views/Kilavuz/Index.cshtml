@@ -1,0 +1,191 @@
+@inject Microsoft.Extensions.Options.IOptions<Ayarlar> Ayar
+@{
+    ViewData["Title"] = "Kılavuz";
+}
+<style>
+    .icindekiler { columns: 2; column-gap: 32px; margin: 0; padding-left: 20px; }
+    .icindekiler li { margin-bottom: 4px; }
+    .adimlar { counter-reset: adim; list-style: none; padding: 0; margin: 0; }
+    .adimlar > li { counter-increment: adim; position: relative; padding: 0 0 16px 48px; }
+    .adimlar > li::before {
+        content: counter(adim); position: absolute; left: 0; top: -2px; width: 32px; height: 32px; border-radius: 50%;
+        background: var(--ana); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .adimlar b.baslik { display: block; margin-bottom: 2px; }
+    .kilavuz table td { white-space: normal; vertical-align: top; }
+    .kilavuz h2 { scroll-margin-top: 16px; }
+    @@media (max-width: 640px) { .icindekiler { columns: 1; } }
+</style>
+
+<div class="kilavuz">
+<h1>Kılavuz</h1>
+<p class="soluk">Programın nasıl kullanılacağını adım adım anlatır. Her ay yapılacaklar için <a href="#her-ay">2. bölüme</a> bakmanız yeterli.</p>
+
+<div class="kart">
+    <h2>İçindekiler</h2>
+    <ol class="icindekiler">
+        <li><a href="#nedir">Program ne işe yarar?</a></li>
+        <li><a href="#her-ay">Her ay yapılacaklar</a></li>
+        <li><a href="#excel">Excel nasıl hazırlanır?</a></li>
+        <li><a href="#kodlar">GİB'in döndüğü kodlar</a></li>
+        <li><a href="#ekranlar">Menüdeki ekranlar</a></li>
+        <li><a href="#ortam">Test ortamı ve canlı ortam</a></li>
+        <li><a href="#sorunlar">Sorunlar ve çözümleri</a></li>
+        <li><a href="#kurallar">Unutulmaması gerekenler</a></li>
+    </ol>
+</div>
+
+<div class="kart">
+    <h2 id="nedir">1. Program ne işe yarar?</h2>
+    <p>Bu uygulama sayesinde, <b>AKİS uyumlu USB akıllı kart tipindeki mali mührünüzü</b> kullanarak, elektrikli araçların şarj hizmetlerine ilişkin,
+        <b>ŞARJANLIK</b> türünde düzenlediğiniz faturalara karşılık gelen <b>aylık raporlarınızı</b> Gelir İdaresi Başkanlığı'nın
+        <b>ÖKC (Ödeme Kaydedici Cihaz) web servisine</b> imzalı ve toplu olarak, tek dosya halinde gönderebilirsiniz.</p>
+    <p>Bu bildirim yasal bir zorunluluktur (551 Sıra No.lu Vergi Usul Kanunu Genel Tebliği).</p>
+    <ul>
+        <li><b>Ne gönderilir:</b> O ay şarj olan her araç için plaka, toplam kWh ve toplam tutar. Her plaka tek satırdır.</li>
+        <li><b>Ne zaman:</b> Her ayın raporu, <b>takip eden ayın 15'ine kadar</b> gönderilir. Örnek: Ekim raporu en geç 15 Kasım.</li>
+        <li><b>Nasıl:</b> Rapor, şirketin <b>mali mührüyle</b> (üzerinde TÜBİTAK yazan flash bellek) imzalanır. Mühür takılı değilse gönderim yapılamaz.</li>    </ul>
+    <p class="soluk" style="margin-bottom:0"><b>"EŞÜ" ne demek?</b> <b>E</b>lektrikli <b>Ş</b>arj <b>Ü</b>nitesi. GİB şarj cihazlarını yazar kasalar (ÖKC) gibi kendi ÖKC sistemine bağlar;
+        bu yüzden rapor GİB'in ÖKC web servisine (okc.gib.gov.tr/okcesu) gönderilir ve resmi belgelerde "EŞÜ raporu" diye geçer.</p>
+</div>
+
+<div class="kart">
+    <h2 id="her-ay">2. Her ay yapılacaklar</h2>
+    <ol class="adimlar">
+        <li><b class="baslik">Excel'i hazırlayın</b>
+            Geçen ayın şarj verilerini <code>plaka</code>, <code>kwh</code>, <code>tl</code> sütunlarıyla hazırlayın. Ayrıntı: <a href="#excel">3. bölüm</a>.</li>
+        <li><b class="baslik">Mali mühürü takın</b>
+            TÜBİTAK yazan flash belleği bilgisayara takın. Mühürü kullanan başka bir program açıksa kapatın.</li>
+        <li><b class="baslik">Programı açın</b>
+            <code>C:\GibEsu\GibEsuGonderim.exe</code> dosyasını (ya da masaüstündeki kısayolu) çift tıklayın. Siyah bir pencere ve tarayıcıda bu program açılır.
+            <b>Siyah pencereyi kapatmayın;</b> kapatırsanız program durur.</li>
+        <li><b class="baslik">Excel'i yükleyin</b>
+            <a href="/">Yeni Rapor</a> ekranında Excel dosyasını seçin. Dönem kendiliğinden geçen ay olarak gelir; doğruysa <b>Excel'i oku ve önizle</b> düğmesine basın.
+            Gönderim bir sonraki adımlarda, siz onaylayınca yapılır.</li>
+        <li><b class="baslik">Önizlemeyi kontrol edin</b>
+            Kırmızı hata varsa Excel'i düzeltip yeniden yükleyin; hatalar satır numarasıyla yazılır.
+            Plaka sayısını, toplam kWh'yi ve toplam tutarı kontrol edin. Sarı uyarıları okuyun: önceki aya göre büyük fark ya da "bu Excel daha önce gönderilmiş" uyarısı yanlış dosya seçildiğini gösterebilir.</li>
+        <li><b class="baslik">İmzalayıp gönderin</b>
+            Mühür sertifikası kendiliğinden seçilir. Kartın PIN'ini girin, kontrol ettiğinizi onaylayan kutuyu işaretleyin ve <b>İmzala ve GİB'e gönder</b> düğmesine basın.
+            İşlem 1–2 dakika sürebilir; bu sırada sayfayı kapatmayın.</li>
+        <li><b class="baslik">Sonucu kontrol edin</b>
+            Program GİB'in sonucunu yaklaşık 1 dakika bekler. <span class="etiket basarili">30</span> görünürse iş bitmiştir.
+            <span class="etiket bekliyor">10</span> veya <span class="etiket bekliyor">15</span> görünürse GİB henüz işliyordur; birkaç saat sonra
+            ana sayfadaki "Sonucu kesinleşmemiş gönderimler" listesinden ya da <a href="/Gecmis">Geçmiş</a> ekranından <b>Sorgula</b>'ya basın.</li>
+    </ol>
+    <div class="mesaj basarili" style="margin:0"><b>İş, durum kodu 30 görüldüğünde biter.</b> "Dosya kaydedildi" mesajı yalnızca GİB'in dosyayı aldığını gösterir; işlendiğini göstermez.</div>
+</div>
+
+<div class="kart">
+    <h2 id="excel">3. Excel nasıl hazırlanır?</h2>
+    <p>İlk satıra (ya da ilk 10 satırdan birine) sütun başlıklarını yazın. Sütunların sırası önemli değildir. <a href="/Home/Sablon">Boş şablonu indirin</a>.</p>
+    <div class="tablo-kap">
+        <table>
+            <thead><tr><th>Sütun başlığı</th><th>Zorunlu mu?</th><th>Ne yazılır?</th><th>Örnek</th></tr></thead>
+            <tbody>
+                <tr><td><code>plaka</code></td><td>Evet</td><td>Araç plakası. Boşluk, tire ve küçük harf sorun değildir; program düzeltir.</td><td>34 ABC 123</td></tr>
+                <tr><td><code>kwh</code></td><td>Evet</td><td>Araca verilen enerji (kWh). Sıfırdan büyük, en fazla 2 ondalık.</td><td>12,5</td></tr>
+                <tr><td><code>tl</code></td><td>Evet</td><td>Şarj hizmetinin toplam tutarı (TL). Sıfırdan büyük, en fazla 2 ondalık.</td><td>160,25</td></tr>
+                <tr><td><code>aracKimlikNo</code></td><td>Hayır</td><td>Şarj ünitesi aracın kimlik numarasını okuyabiliyorsa.</td><td></td></tr>
+                <tr><td><code>roaming vkn</code>, <code>roaming unvan</code></td><td>Hayır</td><td>Hizmet başka bir şarj ağı üzerinden (roaming) verildiyse o işletmecinin vergi numarası ve unvanı.</td><td>1234567890, ÖRNEK ŞARJ A.Ş.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <ul>
+        <li><b>Aynı plaka birden fazla satırda olabilir.</b> Program bu satırları toplar ve GİB'e tek satır gönderir.</li>
+        <li><b>Sayıları sayı olarak girin.</b> Metin olarak yazılan <code>12.500</code> gibi değerler hem 12500 hem 12,5 anlamına gelebileceği için kabul edilmez. <code>12500</code> ya da <code>12,5</code> yazın.</li>
+        <li><b>TL, ₺ gibi işaretler</b> sorun değildir; program temizler.</li>
+        <li>Excel dosyası açıkken de yüklenebilir. Formüllü hücrelerde hesaplanmış değer kullanılır.</li>
+    </ul>
+</div>
+
+<div class="kart">
+    <h2 id="kodlar">4. GİB'in döndüğü kodlar</h2>
+    <div class="tablo-kap">
+        <table>
+            <thead><tr><th>Kod</th><th>Anlamı</th><th>Ne yapmalı?</th></tr></thead>
+            <tbody>
+                <tr><td><span class="etiket basarili">30</span></td><td>Rapor başarıyla işlendi.</td><td>Hiçbir şey. İş bitti.</td></tr>
+                <tr><td><span class="etiket bekliyor">10</span> <span class="etiket bekliyor">15</span></td><td>Dosya kuyrukta / işleniyor.</td><td>Birkaç saat sonra Durum Sorgula ile tekrar bakın. <b>Yeniden göndermeyin.</b></td></tr>
+                <tr><td><span class="etiket hata">167</span></td><td>Mühürün sahibi ile rapordaki şirket uyuşmuyor.</td><td>Doğru şirketin mühürünün takılı olduğunu kontrol edin.</td></tr>
+                <tr><td><span class="etiket hata">154</span> <span class="etiket hata">159</span> <span class="etiket hata">166</span></td><td>İmza doğrulanamadı / bulunamadı / uyuşmuyor.</td><td>Ekranın görüntüsünü bilgi işleme iletin.</td></tr>
+                <tr><td><span class="etiket hata">155</span> <span class="etiket hata">157</span></td><td>Rapor verisinde biçim hatası.</td><td>Açıklamayı bilgi işleme iletin.</td></tr>
+                <tr><td><span class="etiket hata">150–167</span> diğer</td><td>Rapor reddedildi.</td><td>Açıklamayı okuyun, sorunu giderip raporu yeniden gönderin.</td></tr>
+                <tr><td>"Gönderici imza yetkisi yok"</td><td>GİB bu mühüre gönderim yetkisi tanımamış.</td><td>Doğru mühür mü kontrol edin; doğruysa bilgi işleme iletin.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="kart">
+    <h2 id="ekranlar">5. Menüdeki ekranlar</h2>
+    <div class="tablo-kap">
+        <table>
+            <tbody>
+                <tr><th>Yeni Rapor</th><td>Ana sayfa. Hangi ayın raporunun gönderilmesi gerektiğini ve son günü gösterir. Excel buradan yüklenir. Sonucu bekleyen gönderimler ve mühürün süresi dolmak üzereyse uyarı da burada çıkar.</td></tr>
+                <tr><th>Geçmiş</th><td>Yapılan tüm gönderimler ve son durumları. Dönem, ortam ve duruma göre süzülebilir.
+                    <b>Plaka ara</b> kutusuna bir plaka yazınca o aracın hangi aylarda kaç kWh ve kaç TL ile bildirildiği listelenir.
+                    <b>Görüntüle</b> o ay GİB'e giden satırları gösterir. <b>Sorgula</b> ile GİB'e "bu rapor ne durumda?" diye sorulur (kart ve PIN gerekir).
+                    Her gönderimin imzalı dosyası (Zip) ve kaynak Excel'i indirilebilir.</td></tr>
+                <tr><th>Kılavuz</th><td>Bu sayfa.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="kart">
+    <h2 id="ortam">6. Test ortamı ve canlı ortam</h2>
+    @if (Ayar.Value.CanliAcik)
+    {
+        <div class="mesaj uyari"><b>Şu an canlı ortam açık:</b> Canlı seçilerek yapılan gönderimler gerçek bildirimdir.</div>
+    }
+    else
+    {
+        <div class="mesaj bilgi"><b>Şu an TEST MODU:</b> Program yalnızca GİB'in test ortamına gönderir. Bu gönderimlerin yasal geçerliliği yoktur.</div>
+    }
+    <ul>
+        <li><b>Test ortamı</b> (okctest.gib.gov.tr): Denemeler içindir. Gönderilen rapor yasal bildirim sayılmaz.</li>
+        <li><b>Canlı ortam</b> (okc.gib.gov.tr): Gerçek bildirimdir. Gönderim ekranındaki "GİB ortamı" listesinde <b>Canlı</b> seçilir.</li>
+        <li>Canlı ortam bilgi işlem tarafından açılır ve kapatılır. Açıkken sayfanın üstündeki "TEST MODU" yazısı kaybolur.</li>
+    </ul>
+</div>
+
+<div class="kart">
+    <h2 id="sorunlar">7. Sorunlar ve çözümleri</h2>
+    <div class="mesaj bilgi">
+        <b><a href="/Sistem">Sistem Kontrolü</a></b> sayfası bu bilgisayarın hazır olup olmadığını kendisi kontrol eder: kart sürücüsü, takılı mühür, saat ve GİB bağlantısı.
+        <b>Kartı test et</b> düğmesi GİB'e bir şey göndermeden mühürle deneme imzası atar. İlk kurulumda, yeni mühür alındığında ya da bir sorun çıktığında kullanın.
+    </div>
+    <div class="tablo-kap">
+        <table>
+            <thead><tr><th>Ekranda görülen</th><th>Ne yapmalı?</th></tr></thead>
+            <tbody>
+                <tr><td>Takılı kartta mühür sertifikası bulunamadı</td><td>Flash bellek takılı mı bakın. Mühürü kullanan başka bir program açıksa kapatın. Flash belleği çıkarıp yeniden takın ve sayfayı yenileyin.</td></tr>
+                <tr><td>Kart sürücüsü bulunamadı</td><td>Bilgisayarda AKİS kart sürücüsü kurulu değil. Sürücü olmadan mühür okunamaz. Kamu SM'nin sitesinden ücretsiz kurulur; bilgi işleme haber verin.</td></tr>
+                <tr><td>PIN hatalı / son deneme hakkı uyarısı</td><td><b>Durun.</b> Art arda yanlış girilen PIN kartı kilitler. PIN'i doğruladıktan sonra tekrar deneyin.</td></tr>
+                <tr><td>… henüz bitmedi</td><td>Bir ayın raporu, o ay bitmeden gönderilemez. Ayı ve yılı kontrol edin.</td></tr>
+                <tr><td>Bu dönem için daha önce gönderim yapılmış</td><td>Aynı ayı ikinci kez göndermeyin. Önce <a href="/Gecmis">Geçmiş</a> ekranından ilk gönderimin durumuna bakın. Yalnızca ilk gönderim reddedildiyse (150 ve üstü kod) yeniden gönderin.</td></tr>
+                <tr><td>Bağlantı koptu – ulaştı mı bilinmiyor</td><td>Yeniden göndermeden önce aynı paketi <a href="/Durum">Durum Sorgula</a> ile sorgulayın. GİB bir kod dönerse rapor ulaşmıştır.</td></tr>
+                <tr><td>Önizleme süresi doldu</td><td>Önizleme 2 saat saklanır. Excel'i yeniden yükleyin.</td></tr>
+                <tr><td>Program açılmıyor ya da "zaten çalışıyor" yazıyor</td><td>Siyah pencere açık mı bakın. Tarayıcıda <code>http://127.0.0.1:5080</code> adresini açın.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="kart">
+    <h2 id="kurallar">8. Unutulmaması gerekenler</h2>
+    <div class="mesaj uyari" style="margin:0">
+        <ul style="max-height:none">
+            <li><b>Son gün:</b> takip eden ayın 15'i.</li>
+            <li><b>Bir ay, bir kez:</b> Her ayın raporunu tek bir program ve tek kez gönderin.</li>
+            <li><b>İş 30 ile biter:</b> "Dosya kaydedildi" yeterli değildir; kod 30 görülmelidir.</li>
+            <li><b>PIN kaydedilmez:</b> Program PIN'i saklamaz. PIN'i kimseyle paylaşmayın.</li>
+            <li><b>Mühürün süresi:</b> Ana sayfa, süre dolmadan 60 gün önce uyarır. Yenileme başvurusunu zamanında yapın.</li>
+            <li><b>Kayıtlar:</b> Gönderilen her rapor (imzalı dosya ve Excel) <a href="/Gecmis">Geçmiş</a> ekranında saklanır.</li>
+        </ul>
+    </div>
+    <p class="soluk" style="margin-bottom:0">Resmi kaynak: <a href="https://ynokc.gib.gov.tr/UploadedFiles/Files/ESU_Teknik_Kilavuz_Surum3-20062024.pdf" target="_blank" rel="noopener">ESÜ Teknik Kılavuzu Sürüm 3.0</a> (bölüm 2.2, aylık bildirim) ·
+        <a href="https://ynokc.gib.gov.tr/Home/DuyuruArsiv" target="_blank" rel="noopener">GİB duyuruları</a></p>
+</div>
+</div>

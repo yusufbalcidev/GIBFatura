@@ -1,0 +1,100 @@
+﻿@model AnaSayfaModeli
+@{
+    ViewData["Title"] = "Yeni Rapor";
+    int yil = Model.Yil;
+    int ay = Model.Ay;
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    var basarili = Model.DonemGonderimleri.FirstOrDefault(k => k.DurumTuru == PaketDurumTuru.Basarili);
+    var bekleyen = Model.DonemGonderimleri.FirstOrDefault(k => k.DurumTuru != PaketDurumTuru.Hata);
+    var sonTarih = Model.SonTarih.ToString("dd.MM.yyyy");
+}
+<h1>Aylık şarj hizmetleri raporu</h1>
+<p class="soluk">Bu uygulama sayesinde, AKİS uyumlu USB akıllı kart tipindeki mali mührünüzü kullanarak, elektrikli araçların şarj hizmetlerine ilişkin,
+    ŞARJANLIK türünde düzenlediğiniz faturalara karşılık gelen aylık raporlarınızı Gelir İdaresi Başkanlığı'nın ÖKC (Ödeme Kaydedici Cihaz) web servisine
+    imzalı ve toplu olarak, tek dosya halinde gönderebilirsiniz. <a href="/Kilavuz">Kılavuz</a></p>
+
+@if (Model.Hata != null)
+{
+    <div class="mesaj hata">@Model.Hata</div>
+}
+
+@if (basarili != null)
+{
+    <div class="mesaj basarili"><b>@Model.BeklenenDonemAdi raporu gönderildi ve GİB tarafından işlendi (kod 30).</b>
+        @Bicim.Tarih(basarili.Tarih) – paket <code>@basarili.PaketId</code></div>
+}
+else if (bekleyen != null)
+{
+    <div class="mesaj uyari"><b>@Model.BeklenenDonemAdi raporu gönderildi, GİB'in işleme sonucu henüz alınmadı.</b>
+        <a href="/Durum?paketId=@bekleyen.PaketId&ortam=@bekleyen.Ortam">Durumu sorgula</a> (son gün @sonTarih)</div>
+}
+else if (Model.KalanGun < 0)
+{
+    <div class="mesaj hata"><b>@Model.BeklenenDonemAdi raporu bu uygulamadan gönderilmedi ve son gün (@sonTarih) geçti.</b>
+        Başka bir programla gönderilmediyse hemen gönderin.</div>
+}
+else
+{
+    <div class="mesaj @(Model.KalanGun <= 5 ? "hata" : "bilgi")"><b>@Model.BeklenenDonemAdi raporu henüz bu uygulamadan gönderilmedi.</b>
+        Son gün @sonTarih (@(Model.KalanGun == 0 ? "bugün" : Model.KalanGun + " gün kaldı")).</div>
+}
+
+@foreach (var s in Model.SuresiYaklasanlar)
+{
+    var gun = (int)Math.Floor((s.Sertifika.NotAfter - DateTime.Now).TotalDays);
+    <div class="mesaj @(gun < 15 ? "hata" : "uyari")"><b>Mali mühürün süresi @(gun < 0 ? "dolmuş" : $"{gun} gün sonra doluyor") (@s.Sertifika.NotAfter.ToString("dd.MM.yyyy")).</b>
+        @SertifikaBilgisi.OrtakAd(s.Sertifika) – yenisi için Kamu SM'ye zamanında başvurun.</div>
+}
+
+@if (Model.SonucBekleyenler.Count > 0)
+{
+    <div class="kart">
+        <h2>Sonucu kesinleşmemiş gönderimler</h2>
+        <p class="soluk">GİB'e ulaşmış ama işlenme sonucu (kod 30 ya da hata kodu) henüz alınmamış paketler. Birkaç saat sonra sorgulayın.</p>
+        <div class="tablo-kap">
+            <table>
+                <thead><tr><th>Tarih</th><th>Dönem</th><th>Ortam</th><th>Durum</th><th>Paket ID</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var k in Model.SonucBekleyenler)
+                    {
+                        <tr>
+                            <td>@Bicim.Tarih(k.Tarih)</td>
+                            <td>@k.Donem</td>
+                            <td><span class="etiket @(k.Ortam == GibOrtami.Canli ? "canli" : "test")">@k.Ortam</span></td>
+                            <td>@if (k.SonucBilinmiyor)
+                                {
+                                    <span class="etiket hata">Bağlantı koptu – ulaştı mı bilinmiyor</span>
+                                }
+                                else
+                                {
+                                    <span class="etiket bekliyor">@(k.DurumKodu?.ToString() ?? "?") @k.DurumAciklamasi</span>
+                                }</td>
+                            <td><code>@k.PaketId</code></td>
+                            <td><a class="dugme ikincil" href="/Durum?paketId=@k.PaketId&ortam=@k.Ortam">Sorgula</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="kart">
+    <h2>Excel'i yükleyin</h2>
+    <form method="post" asp-controller="Home" asp-action="Onizle" enctype="multipart/form-data" data-kilitle="Okunuyor...">
+        <label for="excel">Excel dosyası</label>
+        <input type="file" id="excel" name="excel" accept=".xlsx" required />
+        <div class="soluk" style="margin-top:4px"><code>plaka</code>, <code>kwh</code>, <code>tl</code> sütunları olmalı ·
+            <a href="/Home/Sablon">Boş şablon</a> · <a href="/Kilavuz#excel">Excel nasıl hazırlanır?</a></div>
+
+        <label for="donem">Dönem</label>
+        <select id="donem" name="donem">
+            @for (var d = new DateTime(yil, ay, 1); d >= new DateTime(2024, 8, 1) && d > new DateTime(yil, ay, 1).AddMonths(-12); d = d.AddMonths(-1))
+            {
+                <option value="@d.ToString("yyyy-MM")">@d.ToString("MMMM yyyy", tr)</option>
+            }
+        </select>
+
+        <button type="submit">Excel'i oku ve önizle</button>
+    </form>
+</div>

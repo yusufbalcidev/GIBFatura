@@ -1,0 +1,138 @@
+@model OnizlemeModeli
+@{
+    ViewData["Title"] = "Önizleme";
+    var v = Model.Veri;
+    var s = v.Sonuc;
+    const int GosterilecekSatir = 200;
+}
+<h1>Önizleme – @v.DonemAdi</h1>
+
+@if (Model.Hata != null)
+{
+    <div class="mesaj hata">@Model.Hata</div>
+}
+
+<div class="kart">
+    <div class="ozet">
+        <div>Dönem<b>@v.DonemAdi</b></div>
+        <div>Plaka<b>@s.Satirlar.Count</b></div>
+        <div>Toplam kWh<b>@Bicim.Sayi(s.ToplamKwh)</b></div>
+        <div>Toplam tutar<b>@Bicim.Para(s.ToplamTutar)</b></div>
+    </div>
+    <p class="soluk" style="margin:10px 0 0">@v.ExcelAdi · @s.OkunanSatirSayisi Excel satırı</p>
+</div>
+
+@if (s.Hatalar.Count > 0)
+{
+    <div class="mesaj hata">
+        <b>Excel'de @s.Hatalar.Count hata var. Düzeltip dosyayı yeniden yükleyin.</b>
+        <ul>@foreach (var h in s.Hatalar) { <li>@h</li> }</ul>
+    </div>
+    <a class="dugme" href="/">Yeni Excel yükle</a>
+}
+@if (s.Uyarilar.Count > 0)
+{
+    <details class="mesaj uyari">
+        <summary><b>@s.Uyarilar.Count uyarı</b> (gönderimi engellemez, görmek için tıklayın)</summary>
+        <ul>@foreach (var u in s.Uyarilar) { <li>@u</li> }</ul>
+    </details>
+}
+
+@if (s.Gecerli)
+{
+    @if (Model.AyniVeriGonderimleri.Count > 0)
+    {
+        <div class="mesaj hata">
+            <b>Bu Excel (ya da birebir aynı toplamlara sahip bir rapor) daha önce gönderilmiş. Yanlış dosyayı seçmiş olabilirsiniz.</b>
+            <ul>
+                @foreach (var g in Model.AyniVeriGonderimleri)
+                {
+                    <li>@g.Donem dönemi – @Bicim.Tarih(g.Tarih) – @g.Ortam – @g.ExcelAdi</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (Model.OncekiDonem is GonderimKaydi od && Model.Farklar.Any(f => f.Olagandisi))
+    {
+        <div class="kart">
+            <h2>Önceki aydan çok farklı (@Bicim.AyAdi(int.Parse(od.Donem[..4]), int.Parse(od.Donem[5..])))</h2>
+            <div class="mesaj uyari">Bir ya da daha fazla değer önceki aya göre %@DonemKarsilastirma.SapmaEsigiYuzde.ToString("0")'dan fazla değişmiş.
+                Excel'in doğru ay ve eksiksiz olduğundan emin olun.</div>
+            <div class="tablo-kap">
+                <table>
+                    <thead><tr><th></th><th class="sayi">Önceki dönem</th><th class="sayi">Bu rapor</th><th class="sayi">Değişim</th></tr></thead>
+                    <tbody>
+                        @foreach (var f in Model.Farklar)
+                        {
+                            var para = f.Ad == "Toplam tutar";
+                            var sayiMi = f.Ad == "Plaka sayısı";
+                            <tr>
+                                <th>@f.Ad</th>
+                                <td class="sayi">@(sayiMi ? f.Onceki.ToString("0") : para ? Bicim.Para(f.Onceki) : Bicim.Sayi(f.Onceki))</td>
+                                <td class="sayi">@(sayiMi ? f.Simdiki.ToString("0") : para ? Bicim.Para(f.Simdiki) : Bicim.Sayi(f.Simdiki))</td>
+                                <td class="sayi"><span class="etiket @(f.Olagandisi ? "bekliyor" : "notr")">@(f.Yuzde is decimal y ? (y > 0 ? "+" : "") + y.ToString("0.0") + "%" : "–")</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (Model.OncekiGonderimler.Count > 0)
+    {
+        <div class="mesaj uyari">
+            <b>Bu dönem için daha önce gönderim yapılmış:</b>
+            <ul>
+                @foreach (var g in Model.OncekiGonderimler)
+                {
+                    <li>@Bicim.Tarih(g.Tarih) – @g.Ortam – paket <code>@g.PaketId</code> – @(g.DurumAciklamasi ?? g.GonderimYaniti)</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="kart">
+        <h2>Mühürle imzala ve gönder</h2>
+        <form method="post" asp-controller="Home" asp-action="Gonder" data-kilitle="İmzalanıyor ve gönderiliyor... (1-2 dakika sürebilir)">
+            <input type="hidden" name="id" value="@v.Anahtar" />
+            <partial name="_KartSecimi" model="Model.Kart" />
+            @if (Model.Kart.Sertifikalar.Count > 0)
+            {
+                <label class="satir"><input type="checkbox" name="onay" value="true" required />
+                    <span><b>@v.DonemAdi</b> dönemi için <b>@s.Satirlar.Count</b> plaka, <b>@Bicim.Sayi(s.ToplamKwh) kWh</b> ve <b>@Bicim.Para(s.ToplamTutar)</b> tutarındaki raporu kontrol ettim.</span></label>
+                @if (Model.OncekiGonderimler.Count > 0)
+                {
+                    <label class="satir"><input type="checkbox" name="mukerrerOnay" value="true" /> Bu dönem için yeniden gönderim yapmak istediğimi onaylıyorum.</label>
+                }
+                <button type="submit">İmzala ve GİB'e gönder</button>
+                <a class="dugme ikincil" href="/">Vazgeç</a>
+            }
+        </form>
+    </div>
+}
+
+<details class="kart">
+    <summary><b>Rapor satırlarını göster</b> <span class="soluk">(@s.Satirlar.Count plaka@(s.Satirlar.Count > GosterilecekSatir ? $", ilk {GosterilecekSatir} gösterilir" : ""))</span></summary>
+    <div class="tablo-kap" style="margin-top:12px">
+        <table>
+            <thead><tr><th>#</th><th>Plaka</th><th class="sayi">kWh</th><th class="sayi">Tutar (TL)</th><th>Araç kimlik no</th><th>Roaming</th></tr></thead>
+            <tbody>
+                @{ var n = 0; }
+                @foreach (var r in s.Satirlar.Take(GosterilecekSatir))
+                {
+                    n++;
+                    <tr>
+                        <td class="soluk">@n</td>
+                        <td>@r.Plaka</td>
+                        <td class="sayi">@Bicim.Sayi(r.Kwh)</td>
+                        <td class="sayi">@Bicim.Sayi(r.Tutar)</td>
+                        <td>@r.AracKimlikNo</td>
+                        <td>@(r.RoamingVkn == null ? "" : $"{r.RoamingVkn} {r.RoamingUnvan}")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</details>

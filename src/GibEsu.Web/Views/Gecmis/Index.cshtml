@@ -1,0 +1,152 @@
+@model GecmisModeli
+@{
+    ViewData["Title"] = "Geçmiş";
+    string DonemAdi(string d) => Bicim.AyAdi(int.Parse(d[..4]), int.Parse(d[5..]));
+}
+<h1>Gönderim geçmişi</h1>
+
+@if (TempData["Hata"] is string hata)
+{
+    <div class="mesaj uyari">@hata</div>
+}
+@if (Model.BozukYedek is string yedek)
+{
+    <div class="mesaj hata">Geçmiş dosyası bozuk bulundu; yedeği <code>@yedek</code> olarak alındı ve geçmiş boş başlatıldı.
+        Önceki gönderimler bu listede görünmez; mükerrer gönderim uyarısı da onları dikkate almaz. Dosyayı destek için saklayın.</div>
+}
+
+<div class="kart">
+    <form method="get" action="/Gecmis">
+        <div class="yan-yana" style="align-items:flex-end">
+            <div>
+                <label for="plaka">Plaka ara</label>
+                <input type="text" id="plaka" name="plaka" value="@Model.Plaka" placeholder="ör. 34ABC123" maxlength="20" />
+            </div>
+            <div>
+                <label for="donem">Dönem</label>
+                <select id="donem" name="donem">
+                    <option value="">Tümü</option>
+                    @foreach (var d in Model.Donemler)
+                    {
+                        <option value="@d" selected="@(d == Model.Donem)">@DonemAdi(d)</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="ortam">Ortam</label>
+                <select id="ortam" name="ortam">
+                    <option value="">Tümü</option>
+                    <option value="Canli" selected="@(Model.Ortam == GibOrtami.Canli)">Canlı</option>
+                    <option value="Test" selected="@(Model.Ortam == GibOrtami.Test)">Test</option>
+                </select>
+            </div>
+            <div>
+                <label for="durum">Durum</label>
+                <select id="durum" name="durum">
+                    <option value="">Tümü</option>
+                    <option value="basarili" selected="@(Model.Durum == "basarili")">Başarılı (30)</option>
+                    <option value="bekliyor" selected="@(Model.Durum == "bekliyor")">Sonuç bekleniyor</option>
+                    <option value="hata" selected="@(Model.Durum == "hata")">Hatalı / reddedildi</option>
+                </select>
+            </div>
+            <div style="min-width:0">
+                <button type="submit" style="margin-top:0">Ara</button>
+                @if (Model.FiltreVar)
+                {
+                    <a class="dugme ikincil" href="/Gecmis" style="margin-top:0">Temizle</a>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+
+@if (Model.PlakaSonuclari is { } sonuclar)
+{
+    <div class="kart">
+        <h2>"@Model.Plaka" için sonuçlar</h2>
+        @if (sonuclar.Count == 0)
+        {
+            <p class="soluk">Bu plaka, seçilen gönderimlerin hiçbirinde bulunamadı.</p>
+        }
+        else
+        {
+            <p class="soluk">@sonuclar.Select(x => x.Kayit.Donem).Distinct().Count() dönemde, @sonuclar.Count satır.
+                Toplam @Bicim.Sayi(sonuclar.Sum(x => x.Satir.Kwh)) kWh, @Bicim.Para(sonuclar.Sum(x => x.Satir.Tutar)).</p>
+            <div class="tablo-kap">
+                <table>
+                    <thead><tr><th>Dönem</th><th>Ortam</th><th>Plaka</th><th class="sayi">kWh</th><th class="sayi">Tutar (TL)</th><th>Roaming</th><th>Durum</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var (k, s) in sonuclar)
+                        {
+                            <tr>
+                                <td>@DonemAdi(k.Donem)</td>
+                                <td><span class="etiket @(k.Ortam == GibOrtami.Canli ? "canli" : "test")">@k.Ortam</span></td>
+                                <td>@s.Plaka</td>
+                                <td class="sayi">@Bicim.Sayi(s.Kwh)</td>
+                                <td class="sayi">@Bicim.Sayi(s.Tutar)</td>
+                                <td>@(s.RoamingVkn == null ? "" : $"{s.RoamingVkn} {s.RoamingUnvan}")</td>
+                                <td><span class="etiket @Bicim.DurumSinifi(k.DurumTuru)">@(k.DurumKodu?.ToString() ?? "?")</span></td>
+                                <td><a href="/Home/Sonuc/@k.PaketId">Görüntüle</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+<div class="kart">
+    @if (Model.ToplamKayit == 0)
+    {
+        <p class="soluk">Henüz gönderim yok.</p>
+    }
+    else if (Model.Kayitlar.Count == 0)
+    {
+        <p class="soluk">Seçilen filtrelere uyan gönderim yok.</p>
+    }
+    else
+    {
+        <h2>Gönderimler <span class="soluk" style="font-weight:normal">(@Model.Kayitlar.Count@(Model.Kayitlar.Count != Model.ToplamKayit ? $" / {Model.ToplamKayit}" : ""))</span></h2>
+        <div class="tablo-kap">
+            <table>
+                <thead>
+                    <tr><th>Tarih</th><th>Dönem</th><th>Ortam</th><th class="sayi">Plaka</th><th class="sayi">Tutar</th><th>Durum</th><th>Paket ID</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var k in Model.Kayitlar)
+                    {
+                        <tr>
+                            <td>@Bicim.Tarih(k.Tarih)</td>
+                            <td>@DonemAdi(k.Donem)</td>
+                            <td><span class="etiket @(k.Ortam == GibOrtami.Canli ? "canli" : "test")">@k.Ortam</span></td>
+                            <td class="sayi">@k.SatirSayisi</td>
+                            <td class="sayi">@Bicim.Para(k.ToplamTutar)</td>
+                            <td>
+                                @if (k.Hata != null)
+                                {
+                                    <span class="etiket hata" title="@k.Hata">Gönderilemedi</span>
+                                }
+                                else
+                                {
+                                    <span class="etiket @Bicim.DurumSinifi(k.DurumTuru)" title="@k.DurumAciklamasi">@(k.DurumKodu?.ToString() ?? "?") @k.DurumAciklamasi</span>
+                                }
+                            </td>
+                            <td><code>@k.PaketId</code></td>
+                            <td>
+                                <a href="/Home/Sonuc/@k.PaketId"><b>Görüntüle</b></a> ·
+                                <a href="/Durum?paketId=@k.PaketId&ortam=@k.Ortam">Sorgula</a> ·
+                                <a href="/Gecmis/Indir/@k.PaketId">Zip</a>
+                                @if (k.ExcelOzeti != null)
+                                {
+                                    <text> · <a href="/Gecmis/Excel/@k.PaketId">Excel</a></text>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <p class="soluk" style="margin:12px 0 0">Listede olmayan bir paketi (ör. başka bir programla gönderilmiş) sorgulamak için: <a href="/Durum">Paket ID ile sorgula</a>.</p>
+</div>

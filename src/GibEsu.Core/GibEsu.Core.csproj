@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>GibEsu.Core</RootNamespace>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="Pkcs11Interop" Version="5.1.2" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Kaynaklar\esuRapor.xsd" LogicalName="GibEsu.esuRapor.xsd" />
+    <EmbeddedResource Include="Kaynaklar\KamuSM_Kurumsal_Kok_S1.cer" LogicalName="GibEsu.KamuSM_Kurumsal_Kok_S1.cer" />
+    <EmbeddedResource Include="Kaynaklar\KamuSM_Kurumsal_Kok_S2.cer" LogicalName="GibEsu.KamuSM_Kurumsal_Kok_S2.cer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GibEsu.Tests" />
+  </ItemGroup>
+
+</Project>

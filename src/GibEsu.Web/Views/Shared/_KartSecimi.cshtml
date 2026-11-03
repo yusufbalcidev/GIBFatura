@@ -1,0 +1,75 @@
+@inject Microsoft.Extensions.Options.IOptions<Ayarlar> Ayar
+@model KartSecimModeli
+@if (Model.KartHatasi != null)
+{
+    <div class="mesaj hata">@Model.KartHatasi <a href="/Sistem">Sistem kontrolüne git</a></div>
+}
+else if (Model.Sertifikalar.Count == 0)
+{
+    <div class="mesaj uyari">Takılı kartta mühür sertifikası bulunamadı. Mali mühür kartını takıp sayfayı yenileyin.</div>
+}
+else
+{
+    var tekSertifika = Model.Sertifikalar.Count == 1;
+    <label>Mali mühür</label>
+    @for (var i = 0; i < Model.Sertifikalar.Count; i++)
+    {
+        var s = Model.Sertifikalar[i];
+        <label class="satir sertifika">
+            @if (tekSertifika)
+            {
+                <input type="hidden" name="sertifika" value="@s.ParmakIzi" />
+            }
+            else
+            {
+                <input type="radio" name="sertifika" value="@s.ParmakIzi" @(s == Model.Sertifikalar.FirstOrDefault(x => x.MaliMuhurMu) || (i == 0 && !Model.Sertifikalar.Any(x => x.MaliMuhurMu)) ? "checked" : "") required />
+            }
+            <span>
+                <b>@SertifikaBilgisi.OrtakAd(s.Sertifika)</b>
+                <small>VKN: @(s.Vkn ?? "–") · Geçerlilik: @s.Sertifika.NotAfter.ToString("dd.MM.yyyy")</small>
+                @if (s.PinUyarisi != null)
+                {
+                    <small style="color: var(--hata); font-weight: 600">@s.PinUyarisi</small>
+                }
+                @if (!s.MaliMuhurMu)
+                {
+                    <small style="color: var(--hata); font-weight: 600">Bu bir mali mühür sertifikası görünmüyor (kişisel e-imza olabilir). GİB raporu mali mühürle imzalanmalı.</small>
+                }
+                @if (s.Sertifika.NotAfter < DateTime.Now)
+                {
+                    <small style="color: var(--hata); font-weight: 600">Sertifikanın süresi dolmuş.</small>
+                }
+                else if (s.Sertifika.NotAfter < DateTime.Now.AddDays(60))
+                {
+                    <small style="color: var(--uyari); font-weight: 600">Sertifikanın süresi @((int)(s.Sertifika.NotAfter - DateTime.Now).TotalDays) gün sonra doluyor.</small>
+                }
+            </span>
+        </label>
+    }
+
+    <label for="pin">PIN</label>
+    <input type="password" id="pin" name="pin" autocomplete="off" required maxlength="32" />
+    <div class="soluk" style="margin-top:4px">PIN kaydedilmez. Art arda yanlış giriş kartı kilitler.</div>
+
+    @if (Model.Sertifikalar.Any(s => s.SonDeneme))
+    {
+        <label class="satir"><input type="checkbox" name="sonDeneme" value="true" /> Kartta son PIN deneme hakkı kaldığını biliyorum, devam et.</label>
+    }
+
+    @if (Model.OrtamSecilebilir)
+    {
+        if (Ayar.Value.CanliAcik)
+        {
+            <label for="ortam">GİB ortamı</label>
+            <select id="ortam" name="ortam">
+                <option value="Canli" selected="@(Model.Ortam == GibOrtami.Canli)">Canlı (gerçek bildirim)</option>
+                <option value="Test" selected="@(Model.Ortam == GibOrtami.Test)">Test</option>
+            </select>
+        }
+        else
+        {
+            @* Canlı kapalıyken seçilecek bir şey yok; sayfanın üstündeki TEST MODU şeridi durumu gösterir. *@
+            <input type="hidden" name="ortam" value="Test" />
+        }
+    }
+}
