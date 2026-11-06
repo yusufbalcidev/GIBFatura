@@ -40,10 +40,11 @@ else
         <tr><th>Son durum</th><td><span class="etiket @Bicim.DurumSinifi(tur)">@(Model.DurumKodu?.ToString() ?? "–")</span> @Model.DurumAciklamasi</td></tr>
     </table>
     <a class="dugme" href="/Durum?paketId=@Model.PaketId&ortam=@Model.Ortam">Durumu yeniden sorgula</a>
+    <a class="dugme" href="/Gecmis/ToplamExcel/@Model.PaketId">GİB'e giden Excel'i indir (plaka toplamları)</a>
     <a class="dugme ikincil" href="/Gecmis/Indir/@Model.PaketId">İmzalı paketi indir (.zip)</a>
     @if (Model.ExcelOzeti != null)
     {
-        <a class="dugme ikincil" href="/Gecmis/Excel/@Model.PaketId">Excel'i indir</a>
+        <a class="dugme ikincil" href="/Gecmis/Excel/@Model.PaketId">Yüklenen Excel'i indir</a>
     }
     <a class="dugme ikincil" href="/Gecmis">Geçmişe dön</a>
 </div>

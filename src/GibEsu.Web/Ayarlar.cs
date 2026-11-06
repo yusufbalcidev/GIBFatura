@@ -26,6 +26,9 @@ public sealed class Ayarlar
     public const string CanliKapaliMesaji =
         "Canlı ortam kapalı: şu an yalnızca test ortamına (okctest.gib.gov.tr) istek yapılabilir. "
         + "Canlıya geçiş kararı verilince appsettings.json dosyasında \"CanliAcik\": true yapılıp uygulama yeniden başlatılır.";
+    /// <summary>GEÇİCİ DENEME: true iken yalnızca test gönderiminde kısa dosya adı kullanılır (bkz. EsuGonderimServisi).</summary>
+    public bool TestKisaDosyaAdi { get; set; }
+
     public List<string> Pkcs11Kutuphaneleri { get; set; } = new();
     public string ImzaciRolu { get; set; } = XadesImzalayici.VarsayilanRol;
 

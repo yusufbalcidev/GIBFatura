@@ -65,9 +65,10 @@ public sealed class GibEsuIstemcisi
     public const string VarsayilanCanliAdres = "https://okc.gib.gov.tr/okcesu/services/EArsivWsPort";
     public const string VarsayilanTestAdres = "https://okctest.gib.gov.tr/okcesu/services/EArsivWsPort";
 
-    // WSDL'deki soapAction değerleri.
-    internal const string GonderEylemi = "urn:SendDocumentFile";
-    internal const string DurumEylemi = "urn:GetBatchStatus";
+    // WSDL'de soapAction büyük harfle ("urn:SendDocumentFile") yazar; ancak servise canlıda rapor gönderdiği kanıtlı üç istemci
+    // (Electroop gib-okc-rapor, eveys GIB-ESU-Reporter, canperk gib-signer) küçük harfli değeri gönderir. Biz de aynısını göndeririz.
+    internal const string GonderEylemi = "urn:sendDocumentFile";
+    internal const string DurumEylemi = "urn:getBatchStatus";
 
     private static Uri _canliAdres = new(VarsayilanCanliAdres);
     private static Uri _testAdres = new(VarsayilanTestAdres);
@@ -156,8 +157,8 @@ public sealed class GibEsuIstemcisi
         var adres = Adres(ortam);
         using var istek = new HttpRequestMessage(HttpMethod.Post, adres);
         istek.Content = new ByteArrayContent(zarf);
-        // SOAP 1.2'de eylem Content-Type'ın action parametresinde taşınır; SOAPAction başlığı da eski istemcilerle uyum için gönderilir.
-        istek.Content.Headers.ContentType = MediaTypeHeaderValue.Parse($"application/soap+xml; charset=utf-8; action=\"{eylem}\"");
+        // Kanıtlı istemciler gibi: Content-Type'ta action parametresi yok, eylem yalnızca SOAPAction başlığında.
+        istek.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/soap+xml; charset=utf-8");
         istek.Headers.TryAddWithoutValidation("SOAPAction", eylem);
 
         var baslangic = DateTime.Now;

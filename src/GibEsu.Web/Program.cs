@@ -53,6 +53,9 @@ if (!YazilabilirMi(logKlasoru))
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["GibEsu:LogKlasoru"] = logKlasoru });
 
 GibEsuIstemcisi.CanliKilitli = !ayarlar.CanliAcik;
+EsuGonderimServisi.TestKisaDosyaAdi = ayarlar.TestKisaDosyaAdi;
+if (ayarlar.TestKisaDosyaAdi)
+    Console.WriteLine("  DENEME: TestKisaDosyaAdi açık – test gönderimlerinde kısa dosya adı kullanılıyor (canlı etkilenmez).");
 try
 {
     GibEsuIstemcisi.AdresleriAyarla(ayarlar.CanliAdres, ayarlar.TestAdres);

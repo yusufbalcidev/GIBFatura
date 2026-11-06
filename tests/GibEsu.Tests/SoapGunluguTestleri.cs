@@ -41,13 +41,14 @@ public class SoapGunluguTestleri
 
         Assert.Contains("could not execute statement", yanit.HataMesaji);
         var k = Assert.Single(gunluk.Kayitlar);
-        Assert.Equal("urn:SendDocumentFile", k.Eylem);
+        Assert.Equal("urn:sendDocumentFile", k.Eylem);
         Assert.Equal(GibOrtami.Test, k.Ortam);
         Assert.Equal(500, k.HttpDurumu);
         Assert.Equal(zarf, k.Istek);
         Assert.Equal(hataYaniti, Encoding.UTF8.GetString(k.Yanit!));
-        Assert.Contains(k.IstekBasliklari, b => b.StartsWith("SOAPAction: urn:SendDocumentFile"));
+        Assert.Contains(k.IstekBasliklari, b => b.StartsWith("SOAPAction: urn:sendDocumentFile"));
         Assert.Contains(k.IstekBasliklari, b => b.StartsWith("Content-Type: application/soap+xml"));
+        Assert.DoesNotContain(k.IstekBasliklari, b => b.Contains("action="));
         Assert.Contains(k.YanitBasliklari, b => b.Contains(" 500 "));
         Assert.Null(k.Hata);
     }
@@ -62,7 +63,7 @@ public class SoapGunluguTestleri
             istemci.DurumSorgulaAsync(new byte[] { 1, 2, 3 }, GibOrtami.Test, CancellationToken.None));
 
         var k = Assert.Single(gunluk.Kayitlar);
-        Assert.Equal("urn:GetBatchStatus", k.Eylem);
+        Assert.Equal("urn:getBatchStatus", k.Eylem);
         Assert.Null(k.HttpDurumu);
         Assert.Null(k.Yanit);
         Assert.IsType<HttpRequestException>(k.Hata);

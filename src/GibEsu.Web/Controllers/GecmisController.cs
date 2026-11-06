@@ -86,6 +86,43 @@ public class GecmisController : Controller
         return PhysicalFile(yol, "application/zip", paketId + ".zip");
     }
 
+    /// <summary>
+    /// GİB'e giden hâli: imzalı paketteki satırlardan plaka başına toplam Excel'i üretir.
+    /// İlk sayfa (Plaka, kWh, Tutar (TL)) uygulamaya yeniden yüklenebilir biçimdedir; toplamlar "Özet" sayfasındadır.
+    /// </summary>
+    [HttpGet]
+    public IActionResult ToplamExcel(Guid id)
+    {
+        var paketId = id.ToString("D");
+        var yol = _gecmis.PaketYolu(paketId);
+        if (!System.IO.File.Exists(yol))
+            return NotFound();
+        List<EsuSatiri> satirlar;
+        try
+        {
+            satirlar = PaketOkuyucu.Satirlar(System.IO.File.ReadAllBytes(yol));
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Xml.XmlException or FormatException)
+        {
+            _log.LogWarning("Toplam Excel için paket okunamadı: {Paket} {Mesaj}", paketId, ex.Message);
+            return Problem("İmzalı paket okunamadı: " + ex.Message);
+        }
+        var kayit = _gecmis.Bul(paketId);
+        var bilgiler = new List<(string, string)> { ("Paket ID", paketId) };
+        if (kayit != null)
+        {
+            bilgiler.Add(("Dönem", kayit.Donem));
+            bilgiler.Add(("Ortam", kayit.Ortam.ToString()));
+            bilgiler.Add(("VKN", kayit.Vkn));
+            bilgiler.Add(("Kaynak Excel", kayit.ExcelAdi));
+            bilgiler.Add(("Gönderim zamanı", kayit.Tarih.ToString("dd.MM.yyyy HH:mm")));
+            bilgiler.Add(("GİB durumu", kayit.DurumKodu == null ? "–" : $"{kayit.DurumKodu} {kayit.DurumAciklamasi}".Trim()));
+        }
+        var icerik = ToplamExcelUretici.Uret(satirlar, bilgiler);
+        var ad = kayit == null ? $"ESU_{paketId}_toplam.xlsx" : $"ESU_{kayit.Donem}_{kayit.Ortam}_toplam.xlsx";
+        return File(icerik, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ad);
+    }
+
     /// <summary>Raporun hazırlandığı Excel dosyasını (arşivlenmişse) indirir.</summary>
     [HttpGet]
     public IActionResult Excel(Guid id)

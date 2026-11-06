@@ -119,8 +119,9 @@ Yapı, GİB'in Eylül 2026'da kabul ettiği gerçek gönderimle birebir aynıdı
    - SignedInfo: exclusive C14N (`soap web`); EC anahtarda **ECDSA-SHA384 (ham r‖s)**.
    - Sertifika BinarySecurityToken olarak eklenir ve DirectReference ile gösterilir.
 5. **Servis:** `https://okc.gib.gov.tr/okcesu/services/EArsivWsPort` (test: `okctest.gib.gov.tr`).
-   - Gönderim: `sendDocumentFile` (SOAPAction `urn:SendDocumentFile`). Başarı yanıtı "Dosya kaydedildi".
-   - Durum: `getBatchStatus` (SOAPAction `urn:GetBatchStatus`), paket ID ile.
+   - Gönderim: `sendDocumentFile` (SOAPAction `urn:sendDocumentFile`, Content-Type `application/soap+xml; charset=utf-8`, `action=` parametresi yok). Başarı yanıtı "Dosya kaydedildi".
+   - Durum: `getBatchStatus` (SOAPAction `urn:getBatchStatus`), paket ID ile.
+   - Başlık biçimi, canlıda çalıştığı kanıtlı üç istemciyle (Electroop gib-okc-rapor, eveys GIB-ESU-Reporter, canperk gib-signer) aynıdır.
 6. **SSL:** GİB sunucularının sertifikası *KamuSM Kurumsal Kök* sertifikasına bağlanır ve bu kök Windows'ta güvenilir değildir. Kök sertifika uygulamaya gömülüdür; yalnızca bu kökle doğrulanan zincir kabul edilir.
 7. **Saat:** WS-Security zaman damgası NTP'den (time.google.com) alınır, böylece bilgisayar saatindeki kayma sorun çıkarmaz.
 

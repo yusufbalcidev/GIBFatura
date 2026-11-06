@@ -79,10 +79,29 @@ public sealed class EsuGonderimServisi
         };
     }
 
+    /// <summary>
+    /// GEÇİCİ DENEME (appsettings: TestKisaDosyaAdi): test ortamının 15.10.2026'dan beri verdiği DataException
+    /// 40 karakterlik dosya adından mı geliyor? true iken yalnızca TEST gönderiminde dosya adı ve zip içindeki
+    /// XML adı paket ID'nin ilk 8 karakterine kısaltılır. Canlı gönderim her zaman raporNo.zip kullanır.
+    /// </summary>
+    public static bool TestKisaDosyaAdi { get; set; }
+
+    public static (string DosyaAdi, byte[] Zip) GonderilecekDosya(HazirPaket paket, GibOrtami ortam) =>
+        GonderilecekDosya(paket, ortam, TestKisaDosyaAdi);
+
+    public static (string DosyaAdi, byte[] Zip) GonderilecekDosya(HazirPaket paket, GibOrtami ortam, bool testKisaDosyaAdi)
+    {
+        if (ortam != GibOrtami.Test || !testKisaDosyaAdi)
+            return (paket.DosyaAdi, paket.Zip);
+        var ad = paket.PaketId.ToString("N")[..8];
+        return (ad + ".zip", PaketOlusturucu.Zip(ad, paket.ImzaliXml));
+    }
+
     public async Task<GibYaniti> GonderAsync(HazirPaket paket, IMuhurImzaci imzaci, GibOrtami ortam, CancellationToken iptal)
     {
         var saat = await NtpSaati.SimdiAsync(iptal).ConfigureAwait(false);
-        var zarf = ImzaliZarf(WsSecurityImzalayici.DosyaGonderGovdesi(paket.DosyaAdi, paket.Zip), imzaci, saat.Utc);
+        var (dosyaAdi, zip) = GonderilecekDosya(paket, ortam);
+        var zarf = ImzaliZarf(WsSecurityImzalayici.DosyaGonderGovdesi(dosyaAdi, zip), imzaci, saat.Utc);
         return await _istemci.DosyaGonderAsync(zarf, ortam, iptal).ConfigureAwait(false);
     }
 

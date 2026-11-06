@@ -136,10 +136,11 @@
                             <td>
                                 <a href="/Home/Sonuc/@k.PaketId"><b>Görüntüle</b></a> ·
                                 <a href="/Durum?paketId=@k.PaketId&ortam=@k.Ortam">Sorgula</a> ·
-                                <a href="/Gecmis/Indir/@k.PaketId">Zip</a>
+                                <a href="/Gecmis/Indir/@k.PaketId">Zip</a> ·
+                                <a href="/Gecmis/ToplamExcel/@k.PaketId" title="GİB'e giden hâli: plaka başına toplam">Toplam Excel</a>
                                 @if (k.ExcelOzeti != null)
                                 {
-                                    <text> · <a href="/Gecmis/Excel/@k.PaketId">Excel</a></text>
+                                    <text> · <a href="/Gecmis/Excel/@k.PaketId" title="Yüklediğiniz kaynak Excel">Yüklenen Excel</a></text>
                                 }
                             </td>
                         </tr>

@@ -70,13 +70,14 @@ public class OnKontrolTestleri
     }
 
     [Fact]
-    public void AdresVeEylemlerWsdlIleAyni()
+    public void AdresGibYazisiylaEylemlerKanitliIstemcilerleAyni()
     {
-        // GİB'in okcdestek yazısı ve okctest …/EArsivWsPort/earsiv.wsdl
+        // Adresler: GİB'in okcdestek yazısı ve okctest …/EArsivWsPort/earsiv.wsdl.
+        // Eylemler: Electroop, eveys ve canperk istemcilerinin gönderdiği küçük harfli değerler.
         Assert.Equal("https://okc.gib.gov.tr/okcesu/services/EArsivWsPort", GibEsuIstemcisi.VarsayilanCanliAdres);
         Assert.Equal("https://okctest.gib.gov.tr/okcesu/services/EArsivWsPort", GibEsuIstemcisi.VarsayilanTestAdres);
-        Assert.Equal("urn:SendDocumentFile", GibEsuIstemcisi.GonderEylemi);
-        Assert.Equal("urn:GetBatchStatus", GibEsuIstemcisi.DurumEylemi);
+        Assert.Equal("urn:sendDocumentFile", GibEsuIstemcisi.GonderEylemi);
+        Assert.Equal("urn:getBatchStatus", GibEsuIstemcisi.DurumEylemi);
     }
 
     private sealed class AgaCikmaYasak : HttpMessageHandler

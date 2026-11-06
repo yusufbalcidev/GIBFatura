@@ -12,7 +12,10 @@ public static class PaketOlusturucu
 
     public static string DosyaAdi(Guid paketId) => paketId.ToString("D") + ".zip";
 
-    public static byte[] Zip(Guid paketId, byte[] imzaliXml)
+    public static byte[] Zip(Guid paketId, byte[] imzaliXml) => Zip(paketId.ToString("D"), imzaliXml);
+
+    /// <summary>Zip içindeki XML "<paramref name="ad"/>.xml" adını alır (dosya adı "<paramref name="ad"/>.zip" ile aynı).</summary>
+    public static byte[] Zip(string ad, byte[] imzaliXml)
     {
         if (imzaliXml.LongLength > EnBuyukAcikBoyut)
             throw new InvalidOperationException(
@@ -21,7 +24,7 @@ public static class PaketOlusturucu
         using var ms = new MemoryStream();
         using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
         {
-            var kayit = zip.CreateEntry(paketId.ToString("D") + ".xml", CompressionLevel.Optimal);
+            var kayit = zip.CreateEntry(ad + ".xml", CompressionLevel.Optimal);
             using var yazici = kayit.Open();
             yazici.Write(imzaliXml);
         }
